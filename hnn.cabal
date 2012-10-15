@@ -6,6 +6,7 @@ version:             0.2.0.0
 synopsis:            A fast and simple neural network library
 -- description:         
 homepage:            http://github.com/alpmestan/hnn
+bug-reports:         http://github.com/alpmestan/hnn/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Alp Mestanogullari <alpmestan@gmail.com>, Gatlin Johnson <rokenrol@gmail.com>
@@ -21,4 +22,4 @@ library
   build-depends:       base ==4.5.*,
                        vector,
                        mwc-random
-  ghc-options:         -O2 -funbox-strict-fields
+  ghc-options:         -O2 -funbox-strict-fields -Wall
