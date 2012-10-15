@@ -17,7 +17,7 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     AI.HNN.Neuron
+  exposed-modules:     AI.HNN.FF.Network
   -- other-modules:       
   build-depends:       base ==4.5.*,
                        vector,
