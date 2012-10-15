@@ -1,5 +1,5 @@
 {-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards #-}
-module AI.HNN.FF.Network (Matrix, Network, Vec, createNetwork, computeNetworkWith, sigmoid, tanh) where
+module AI.HNN.FF.Network (Network, Vec, createNetwork, computeNetworkWith, sigmoid, tanh) where
 
 import qualified Data.Vector         as V
 import qualified Data.Vector.Unboxed as U
@@ -70,6 +70,19 @@ computeNetworkWith :: (U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Ve
 computeNetworkWith (Network{..}) activation input = V.foldl' (computeLayerWith activation) input $ V.zip matrices thresholds
 {-# INLINE computeNetworkWith #-}
 
+-- TODO: computeNetworkWith' taking a list of activation functions: one per layer
+
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 {-# INLINE sigmoid #-}
+
+{- Example usage:
+main = do
+  -- create a network with 2 inputs, 2 neurons in a hidden layer, and 1 neuron
+  -- in the output layer
+  n <- createNetwork 2 [2, 1]
+
+  -- compute the output of the network using the sigmoid activation function
+  -- for all the neurons, on the input (0.5, 0.8)
+  print $ computeNetworkWith n sigmoid (U.fromList [0.5, 0.8])
+-}
