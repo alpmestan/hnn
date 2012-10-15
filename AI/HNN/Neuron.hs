@@ -1,4 +1,4 @@
-module Net (Neuron(..), compute, sigmoid, tanh) where
+module Net (Neuron(..), compute, Sigmoid, Tanh, sigmoid, tanh) where
 {-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, BangPatterns, EmptyDataDecls, RecordWildCards #-}
 
 import Data.Vector.Unboxed (Vector, Unbox)
