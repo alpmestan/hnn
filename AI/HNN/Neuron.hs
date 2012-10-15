@@ -1,39 +1,49 @@
-{-# LANGUAGE BangPatterns, RecordWildCards #-}
-
 module Net (Neuron(..), compute, sigmoid, tanh) where
--- tanh is from Prelude
+{-# LANGUAGE MultiParamTypeClasses, FlexibleContexts, FlexibleInstances, BangPatterns, EmptyDataDecls, RecordWildCards #-}
 
 import Data.Vector.Unboxed (Vector, Unbox)
-import qualified Data.Vector.Unboxed as U
+import qualified Data.Vector.Unboxed as V
 
+class Floating a => Activation n a where
+  activation_  :: n a -> (a -> a)
+  activation'_ :: n a -> (a -> a)
 
--- | Our Neuron type, parametrized by the "number" type, which should be:
---   1/ an instance of Num
---   2/ an instance of Data.Vector.Unboxed.Unbox
-data Neuron a = Neuron
-                { weights     :: !(Vector a)
-                , threshold   :: !a
-                , activation  :: a -> a
-                , activation' :: a -> a
-                }
+-- compute :: Activation f => Neuron f a -> Vector a -> a
+-- compute n inputs = activation
 
-compute :: (Num a, Unbox a) => Neuron a -> Vector a -> a
-compute (Neuron{..}) !inputs = activation $ U.sum (U.zipWith (*) weights inputs)
-{-# SPECIALIZE compute :: Neuron Double -> Vector Double -> Double #-}
-{-# SPECIALIZE compute :: Neuron Float  -> Vector Float  -> Float  #-}
-{-# INLINE compute #-}
+data Neuron f a = Neuron
+                  { weights   :: Vector a
+                  , threshold :: a
+                  } deriving (Show)
+
+data Sigmoid
+data Tanh
+
+instance Floating a => Activation (Neuron Sigmoid) a where
+  activation_ _ = sigmoid
+  {-# INLINE activation_ #-}
+
+  activation'_ _ = sigmoid'
+  {-# INLINE activation'_ #-}
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 
 sigmoid' :: Floating a => a -> a
 sigmoid' !x = case sigmoid x of
-  s -> s * (1 - s)
-  
+    s -> s * (1 - s)
+
 {-# SPECIALIZE sigmoid :: Double -> Double #-}
 {-# SPECIALIZE sigmoid :: Float  -> Float  #-}
-{-# INLINE sigmoid #-}
+--{-# INLINE sigmoid #-}
 
 {-# SPECIALIZE sigmoid' :: Double -> Double #-}
 {-# SPECIALIZE sigmoid' :: Float  -> Float  #-}
-{-# INLINE sigmoid' #-}
+--{-# INLINE sigmoid' #-}
+
+compute :: (Activation (Neuron f) a, Floating a, Unbox a)
+        => Neuron f a -> Vector a -> a
+compute n@(Neuron{..}) !inputs = activation_ n $ V.sum (V.zipWith (*) weights inputs)
+{-# SPECIALIZE compute :: Activation (Neuron f) Double => Neuron f Double -> Vector Double -> Double #-}
+{-# SPECIALIZE compute :: Activation (Neuron f) Float  => Neuron f Float  -> Vector Float  -> Float  #-}
+--{-# INLINE compute #-}
