@@ -1,6 +1,6 @@
 {-# LANGUAGE BangPatterns, RecordWildCards #-}
 
-module Net (Neuron(..), compute, sigmoid, tanh) where
+module AI.HNN.Neuron (Neuron(..), compute, sigmoid, sigmoid', tanh) where
 -- tanh is from Prelude
 
 import Data.Vector.Unboxed (Vector, Unbox)
@@ -8,7 +8,7 @@ import qualified Data.Vector.Unboxed as U
 
 
 -- | Our Neuron type, parametrized by the "number" type, which should be:
---   1/ an instance of Num
+--   1/ an instance of Num (Floating wouldn't hurt for common activation funcs)
 --   2/ an instance of Data.Vector.Unboxed.Unbox
 data Neuron a = Neuron
                 { weights     :: !(Vector a)
@@ -21,7 +21,7 @@ compute :: (Num a, Unbox a) => Neuron a -> Vector a -> a
 compute (Neuron{..}) !inputs = activation $ U.sum (U.zipWith (*) weights inputs)
 {-# SPECIALIZE compute :: Neuron Double -> Vector Double -> Double #-}
 {-# SPECIALIZE compute :: Neuron Float  -> Vector Float  -> Float  #-}
-{-# INLINE compute #-}
+-- not sure if it's best to specialize or just INLINE
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
@@ -32,8 +32,8 @@ sigmoid' !x = case sigmoid x of
   
 {-# SPECIALIZE sigmoid :: Double -> Double #-}
 {-# SPECIALIZE sigmoid :: Float  -> Float  #-}
-{-# INLINE sigmoid #-}
+-- same
 
 {-# SPECIALIZE sigmoid' :: Double -> Double #-}
 {-# SPECIALIZE sigmoid' :: Float  -> Float  #-}
-{-# INLINE sigmoid' #-}
+-- same
