@@ -1,5 +1,5 @@
 {-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards #-}
-module AI.HNN.Internal.Matrix (Matrix, getRow, getRows, dot, apply) where
+module AI.HNN.Internal.Matrix (Matrix, Vec, getRow, getRows, dot, apply) where
 
 import qualified Data.Vector         as V
 import qualified Data.Vector.Unboxed as U
