@@ -4,14 +4,23 @@
 name:                hnn
 version:             0.2.0.0
 synopsis:            A fast and simple neural network library
--- description:         
+description:         
+    .
+    A neural network library implemented (for now) purely in Haskell, relying on the excellent
+    vector library.
+    .
+    This library provides a straight and simple feed-forward neural networks implementation which
+    is way better than the one in the first version of hnn.
+    .
+    TODO -> write about recurrent nets when they're implemented, and add one or two usage examples.
+    .
 homepage:            http://github.com/alpmestan/hnn
 bug-reports:         http://github.com/alpmestan/hnn/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Alp Mestanogullari <alpmestan@gmail.com>, Gatlin Johnson <rokenrol@gmail.com>
 maintainer:          Alp Mestanogullari <alpmestan@gmail.com>
--- copyright:           
+-- copyright:
 category:            AI
 build-type:          Simple
 cabal-version:       >=1.8

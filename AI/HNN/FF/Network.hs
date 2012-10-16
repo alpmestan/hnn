@@ -1,4 +1,34 @@
 {-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards #-}
+
+-- |
+-- Module       : AI.HNN.FF.Network
+-- Copyright    : (c) 2012 Alp Mestanogullari
+-- License      : BSD3
+-- Maintainer   : alpmestan@gmail.com
+-- Stability    : experimental
+-- Portability  : GHC
+-- 
+-- An implementation of feed-forward neural networks in pure Haskell.
+-- 
+-- It uses weight matrices between each layer to represent the connections between neurons from
+-- a layer to the next and exports only the useful bits for a user of the library.
+-- 
+-- Here is an example of using this module to create a feed-forward neural network with 2 inputs,
+-- 2 neurons in a hidden layer and one neuron in the output layer, with random weights, and compute
+-- its output for [1,2] using the sigmoid function for activation for all the neurons.
+-- 
+-- > import AI.HNN.FF.Network
+-- > import qualified Data.Vector.Unboxed as U
+-- >
+-- > main = do
+-- >   n <- createNetwork 2 [2, 1] :: IO (Network Double)
+-- >   print $ computeNetworkWith n sigmoid (U.fromList [0.5, 0.5])
+-- 
+-- /Note/: Here, I create a @Network Double@, but you can replace 'Double' with any number type
+-- that implements the @System.Random.MWC.Variate@, @Num@ and @Data.Vector.Unboxed.Unbox@
+-- typeclasses. Having your number type implement the @Floating@ typeclass too is a good idea, since that's what most of the
+-- common activation functions require.
+
 module AI.HNN.FF.Network (Network, Vec, createNetwork, computeNetworkWith, sigmoid, tanh) where
 
 import qualified Data.Vector         as V
@@ -16,8 +46,10 @@ data Network a = Network
                  , arch       :: ![Int]
                  }
 
--- | `createNetwork n l` creates a neural network with 'n' inputs and if 'l' is [n1, n2, ...]
+-- | The following creates a neural network with 'n' inputs and if 'l' is [n1, n2, ...]
 --   the net will have n1 neurons on the first layer, n2 neurons on the second, and so on
+-- 
+-- > createNetwork n l
 createNetwork :: (Variate a, U.Unbox a) => Int -> [Int] -> IO (Network a)
 createNetwork nI as = withSystemRandom . asGenST $ \gen -> do
   (vs, ts) <- go nI as V.empty V.empty gen
@@ -37,7 +69,7 @@ computeLayerWith f input (m, thresholds) = U.map f $! U.zipWith (-) (m `apply` i
 {-# INLINE computeLayerWith #-}
 
 -- | Computes the output of the given 'Network' assuming all neurons have the given function
---   as their activation function, and with input the given Vector
+--   as their activation function, and with input the given 'Vec'
 computeNetworkWith :: (U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Vec a
 computeNetworkWith (Network{..}) activation input = V.foldl' (computeLayerWith activation) input $ V.zip matrices thresholds
 {-# INLINE computeNetworkWith #-}
@@ -47,14 +79,3 @@ computeNetworkWith (Network{..}) activation input = V.foldl' (computeLayerWith a
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 {-# INLINE sigmoid #-}
-
-{- Example usage:
-main = do
-  -- create a network with 2 inputs, 2 neurons in a hidden layer, and 1 neuron
-  -- in the output layer
-  n <- createNetwork 2 [2, 1]
-
-  -- compute the output of the network using the sigmoid activation function
-  -- for all the neurons, on the input (0.5, 0.8)
-  print $ computeNetworkWith n sigmoid (U.fromList [0.5, 0.8])
--}
