@@ -29,7 +29,7 @@
 -- typeclasses. Having your number type implement the @Floating@ typeclass too is a good idea, since that's what most of the
 -- common activation functions require.
 
-module AI.HNN.FF.Network (Network, Vec, createNetwork, computeNetworkWith, sigmoid, tanh) where
+module AI.HNN.FF.Network (Network, Vec, createNetwork, computeNetworkWith, computeNetworkWithS, sigmoid, tanh) where
 
 import qualified Data.Vector         as V
 import qualified Data.Vector.Unboxed as U
@@ -64,17 +64,28 @@ createNetwork nI as = withSystemRandom . asGenST $ \gen -> do
         randomMatrix n m g = uniformVector g (n*m)
 
 -- Helper function that computes the output of a given layer
-computeLayerWith :: (U.Unbox a, Num a) => (a -> a) -> Vec a -> (Matrix a, Vec a) -> Vec a
-computeLayerWith f input (m, thresholds) = U.map f $! U.zipWith (-) (m `apply` input) thresholds 
+computeLayerWith :: (U.Unbox a, Num a) => Vec a -> (Matrix a, Vec a, a -> a) -> Vec a
+computeLayerWith input (m, thresholds, f) = U.map f $! U.zipWith (-) (m `apply` input) thresholds 
 {-# INLINE computeLayerWith #-}
 
 -- | Computes the output of the given 'Network' assuming all neurons have the given function
 --   as their activation function, and with input the given 'Vec'
+-- 
+-- Example:
+-- 
+-- > computeNetworkWith n sigmoid (U.fromList [0.5, 0.5])
 computeNetworkWith :: (U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Vec a
-computeNetworkWith (Network{..}) activation input = V.foldl' (computeLayerWith activation) input $ V.zip matrices thresholds
+computeNetworkWith (Network{..}) activation input = V.foldl' computeLayerWith input $ V.zip3 matrices thresholds (V.replicate (length arch) activation)
 {-# INLINE computeNetworkWith #-}
 
--- TODO: computeNetworkWith' taking a list of activation functions: one per layer
+-- | Computes the output of the given 'Network', just like 'computeNetworkWith', but accepting
+--   different activation functions on each layer. We thus have:
+-- 
+-- > computeNetworkWith n f input == computeNetworkWithS n (repeat f) input
+-- 
+-- (or, to be more accurate, we can replace @repeat f@ by a list containing a copy of @f@ per layer)
+computeNetworkWithS :: (U.Unbox a, Num a) => Network a -> [a -> a] -> Vec a -> Vec a
+computeNetworkWithS (Network{..}) activations input = V.foldl' computeLayerWith input $ V.zip3 matrices thresholds (V.fromList activations)
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
