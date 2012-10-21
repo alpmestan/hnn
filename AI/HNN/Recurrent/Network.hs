@@ -41,8 +41,6 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
---   Since we're in a Monad I think we can use mutable vectors. Look up later
-
 computeStep :: (U.Unbox a, Num a, Monad m) => Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
 computeStep (Network{..}) activation thresh input = do
     next <- return $ U.map activation $! U.zipWith (-) (weights `apply` state) thresh
