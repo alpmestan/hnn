@@ -44,6 +44,7 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 --   precisely one time step.
 computeStep :: (Variate a, U.Unbox a, Num a) =>
     Network a -> (a -> a) -> Vec a -> Vec a -> Network a
+
 computeStep (Network{..}) activation thresh input =
     Network weights (overlay input next nInputs) size nInputs
     where
@@ -56,6 +57,7 @@ computeStep (Network{..}) activation thresh input =
 -- | Monadic version of computeStep, for convenience
 computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
     Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
+
 computeStepM n a t i = return $ computeStep n a t i
 
 sigmoid :: Floating a => a -> a
