@@ -41,13 +41,15 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
-computeStep :: (U.Unbox a, Num a, Monad m) => Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
-computeStep (Network{..}) activation thresh input = do
-    next <- return $ U.map activation $! U.zipWith (-) (weights `apply` state) thresh
-    return $ Network weights (overlay input next nInputs) size nInputs
+computeStep :: (Variate a, U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Vec a -> Network a
+computeStep (Network{..}) activation thresh input =
+    Network weights (overlay input next nInputs) size nInputs
     where
-        overlay :: (M.Unbox a) => Vec a -> Vec a -> Int -> Vec a
+        overlay :: (Variate a, M.Unbox a) => Vec a -> Vec a -> Int -> Vec a
         overlay new old i = new U.++ (U.drop i old)
+        {-# INLINE overlay #-}
+        next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
+        {-# INLINE next #-}
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
