@@ -14,7 +14,7 @@
 -- neurons, and the number of inputs.
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
-                                 sigmoid) where
+                                 sigmoid, computeStepM) where
 
 import AI.HNN.Internal.Matrix
 
@@ -23,6 +23,7 @@ import qualified Data.Vector.Unboxed         as U
 import qualified Data.Vector.Unboxed.Mutable as M
 
 import System.Random.MWC
+import Control.Monad
 
 -- | Our recurrent neural network
 data Network a = Network
@@ -41,7 +42,8 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
-computeStep :: (Variate a, U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Vec a -> Network a
+computeStep :: (Variate a, U.Unbox a, Num a) =>
+    Network a -> (a -> a) -> Vec a -> Vec a -> Network a
 computeStep (Network{..}) activation thresh input =
     Network weights (overlay input next nInputs) size nInputs
     where
@@ -50,6 +52,11 @@ computeStep (Network{..}) activation thresh input =
         {-# INLINE overlay #-}
         next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
         {-# INLINE next #-}
+
+-- | Monadic version of computeStep, for convenience
+computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
+    Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
+computeStepM n a t i = return $ computeStep n a t i
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
