@@ -20,7 +20,6 @@ import AI.HNN.Internal.Matrix
 
 import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as U
-import qualified Data.Vector.Unboxed.Mutable as M
 
 import System.Random.MWC
 
@@ -35,9 +34,12 @@ data Network a = Network
 -- | Creates a network with n neurons, m of which are inputs, and randomized weights
 createNetwork :: (Variate a, U.Unbox a, Fractional a) => Int -> Int -> IO (Network a)
 createNetwork n m = withSystemRandom . asGenST $ \gen -> do
-    let ov = U.fromList (replicate n 0.0)
     rm <- uniformVector gen (n*n)
     return $! Network (Matrix rm n n) ov n m
+    where
+        ov :: (Fractional a, U.Unbox a) => Vec a
+        ov = U.fromList (replicate n 0.0)
+        {-# INLINE ov #-}
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
@@ -47,7 +49,7 @@ computeStep :: (Variate a, U.Unbox a, Num a) =>
 computeStep (Network{..}) activation thresh input =
     Network weights (overlay input next nInputs) size nInputs
     where
-        overlay :: (Variate a, M.Unbox a) => Vec a -> Vec a -> Int -> Vec a
+        overlay :: (Variate a, U.Unbox a) => Vec a -> Vec a -> Int -> Vec a
         overlay new old i = new U.++ (U.drop i old)
         {-# INLINE overlay #-}
         next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
