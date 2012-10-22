@@ -60,6 +60,7 @@ computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
     Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
 
 computeStepM n a t i = return $ computeStep n a t i
+{-# INLINE computeStepM #-}
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
