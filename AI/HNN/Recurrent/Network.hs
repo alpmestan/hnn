@@ -57,7 +57,7 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
     return $! Network (Matrix rm n n) ov n m
     where
         ov :: (Fractional a, U.Unbox a) => Vec a
-        ov = U.fromList (replicate n 0.0)
+        ov = U.replicate n 0.0
         {-# INLINE ov #-}
 
 -- | Evaluates a network with the specified function and list of inputs
@@ -74,7 +74,7 @@ computeStep (Network{..}) activation thresh input =
     Network weights (overlay input next nInputs) size nInputs
     where
         overlay :: (Variate a, U.Unbox a) => Vec a -> Vec a -> Int -> Vec a
-        overlay new old i = new U.++ (U.drop i old)
+        overlay new old i = new U.++ (U.unsafeDrop i old)
         {-# INLINE overlay #-}
         next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
         {-# INLINE next #-}
