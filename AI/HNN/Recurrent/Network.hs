@@ -23,7 +23,6 @@ import qualified Data.Vector.Unboxed         as U
 import qualified Data.Vector.Unboxed.Mutable as M
 
 import System.Random.MWC
-import Control.Monad
 
 -- | Our recurrent neural network
 data Network a = Network
