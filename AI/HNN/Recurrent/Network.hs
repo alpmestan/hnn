@@ -12,6 +12,25 @@
 --
 -- A network is an adjacency matrix of connection weights, the number of
 -- neurons, and the number of inputs.
+--
+-- Usage:
+--
+-- > main = do
+-- >    let numNeurons = 3
+-- >        numInputs  = 2
+-- >        thresholds = U.fromList $ replicate numNeurons 0.5
+-- >        inputs     = map (U.fromList) [ [1, 1]
+-- >                                      , [2, 3]
+-- >                                      , [1, 3]
+-- >                                      , [0, 2]
+-- >                                      ]
+-- >    n <- createNetwork numNeurons numInputs
+-- >    n <- foldM (\x -> computeStepM x sigmoid thresholds) n inputs
+-- >    putStrLn . show $ n
+--
+-- This would create a network with *randomized* connections of *randomized*
+-- weights among neurons. Then this trivial example runs through 4 steps of
+-- feeding inputs into the network and computing the next state.
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  sigmoid, computeStepM) where
@@ -43,6 +62,11 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
+--
+--   > netAfter = computeStep netBefore activation thresholdList inputs
+--
+--   A "threshold" for a neuron is a penalty deducted from the value
+--   calculated. The thresholdList is a list of such for each neuron.
 computeStep :: (Variate a, U.Unbox a, Num a) =>
     Network a -> (a -> a) -> Vec a -> Vec a -> Network a
 
@@ -55,13 +79,14 @@ computeStep (Network{..}) activation thresh input =
         next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
         {-# INLINE next #-}
 
--- | Monadic version of computeStep, for convenience
+-- | Monadic version of `computeStep`, for convenience.
 computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
     Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
 
 computeStepM n a t i = return $ computeStep n a t i
 {-# INLINE computeStepM #-}
 
+-- | It's a simple, differentiable sigmoid function.
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 {-# INLINE sigmoid #-}
