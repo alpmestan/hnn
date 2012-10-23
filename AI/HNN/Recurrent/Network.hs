@@ -38,7 +38,6 @@ module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
 
 import AI.HNN.Internal.Matrix
 
-import qualified Data.Vector                 as V
 import qualified Data.Vector.Unboxed         as U
 
 import System.Random.MWC
