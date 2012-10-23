@@ -37,7 +37,7 @@
 -- output. By convention, then, calling `output net n` returns a vector of the
 -- first `n` neuron values after the inputs. Think of it like this:
 --
--- > [ input1, input2, output1, ..., outputN]
+-- > [ input1, input2, output1, ..., outputN ]
 --
 -- It is up to you to structure your net accordingly. The upcoming
 -- neuro-evolution training algorithm will also follow this convention.
@@ -68,10 +68,10 @@ createNetwork n m = withSystemRandom . asGenST $ \gen -> do
 
 -- | Creates a network with an adjacency matrix of your choosing, specified as
 --   an unboxed vector.
-createNetworkWith :: (Variate a, U.Unbox a, Fractional a) => Int -> Int -> Vec a ->
-    IO (Network a)
-createNetworkWith n m matrix = return $! Network (Matrix matrix n n)
-    (U.replicate n 0.0) n m
+createNetworkWith :: (Variate a, U.Unbox a, Fractional a) =>
+    Int -> Int -> Vec a -> IO (Network a)
+createNetworkWith n m matrix = return $!
+    Network (Matrix matrix n n) (U.replicate n 0.0) n m
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
