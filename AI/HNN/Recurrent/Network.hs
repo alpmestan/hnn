@@ -34,12 +34,12 @@
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  sigmoid, computeStepM, weights,
-                                 state, size, nInputs, output) where
+                                 state, size, nInputs, output, createNetworkWith) where
 
 import AI.HNN.Internal.Matrix
 import System.Random.MWC
 
-import qualified Data.Vector.Unboxed         as U
+import qualified Data.Vector.Unboxed as U
 
 
 -- | Our recurrent neural network
@@ -54,11 +54,14 @@ data Network a = Network
 createNetwork :: (Variate a, U.Unbox a, Fractional a) => Int -> Int -> IO (Network a)
 createNetwork n m = withSystemRandom . asGenST $ \gen -> do
     rm <- uniformVector gen (n*n)
-    return $! Network (Matrix rm n n) ov n m
-    where
-        ov :: (Fractional a, U.Unbox a) => Vec a
-        ov = U.replicate n 0.0
-        {-# INLINE ov #-}
+    return $! Network (Matrix rm n n) (U.replicate n 0.0) n m
+
+-- | Creates a network with an adjacency matrix of your choosing, specified as
+--   an unboxed vector.
+createNetworkWith :: (Variate a, U.Unbox a, Fractional a) => Int -> Int -> Vec a ->
+    IO (Network a)
+createNetworkWith n m matrix = return $! Network (Matrix matrix n n)
+    (U.replicate n 0.0) n m
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
