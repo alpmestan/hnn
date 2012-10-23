@@ -33,7 +33,8 @@
 -- feeding inputs into the network and computing the next state.
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
-                                 sigmoid, computeStepM) where
+                                 sigmoid, computeStepM, weights,
+                                 state, size, nInputs) where
 
 import AI.HNN.Internal.Matrix
 
