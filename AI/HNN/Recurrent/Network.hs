@@ -19,18 +19,28 @@
 -- >    let numNeurons = 3
 -- >        numInputs  = 2
 -- >        thresholds = U.fromList $ replicate numNeurons 0.5
--- >        inputs     = map (U.fromList) [ [1, 1]
+-- >        inputs     = map (U.fromList) [ [1, 0]
+-- >                                      , [0, 1]
 -- >                                      , [2, 3]
--- >                                      , [1, 3]
--- >                                      , [0, 2]
 -- >                                      ]
--- >    n <- createNetwork numNeurons numInputs
+-- >        adjmatrix  = [ 0.5, 0.3, 0.9,
+-- >                       0.1, 0.8, 0.4,
+-- >                       0.7, 0.6, 0.2 ]
+-- >    n <- createNetworkWith numNeurons numInputs (U.fromList adjmatrix)
 -- >    n <- foldM (\x -> computeStepM x sigmoid thresholds) n inputs
--- >    putStrLn . show $ n
+-- >    putStrLn . show $ output n 1 -- get 1 output
 --
--- This would create a network with *randomized* connections of *randomized*
--- weights among neurons. Then this trivial example runs through 4 steps of
--- feeding inputs into the network and computing the next state.
+-- This example creates a network with 3 neurons, the "first" two of which are
+-- input neurons, and steps it over 3 input vectors.
+--
+-- In a recurrent network, *any* non-input value can be usefully considered an
+-- output. By convention, then, calling `output net n` returns a vector of the
+-- first `n` neuron values after the inputs. Think of it like this:
+--
+-- > [ input1, input2, output1, ..., outputN]
+--
+-- It is up to you to structure your net accordingly. The upcoming
+-- neuro-evolution training algorithm will also follow this convention.
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  sigmoid, computeStepM, weights,
