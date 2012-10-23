@@ -34,7 +34,7 @@
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  sigmoid, computeStepM, weights,
-                                 state, size, nInputs) where
+                                 state, size, nInputs, output) where
 
 import AI.HNN.Internal.Matrix
 import System.Random.MWC
@@ -85,6 +85,11 @@ computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
 
 computeStepM n a t i = return $ computeStep n a t i
 {-# INLINE computeStepM #-}
+
+-- | Grab *n* outputs from the net.
+output :: (U.Unbox a) => Network a -> Int -> Vec a
+output (Network{..}) n = U.unsafeSlice nInputs n state
+{-# INLINE output #-}
 
 -- | It's a simple, differentiable sigmoid function.
 sigmoid :: Floating a => a -> a
