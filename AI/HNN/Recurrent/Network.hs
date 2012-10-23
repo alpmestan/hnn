@@ -37,10 +37,10 @@ module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  state, size, nInputs) where
 
 import AI.HNN.Internal.Matrix
+import System.Random.MWC
 
 import qualified Data.Vector.Unboxed         as U
 
-import System.Random.MWC
 
 -- | Our recurrent neural network
 data Network a = Network
