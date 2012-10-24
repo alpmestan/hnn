@@ -11,67 +11,63 @@
 -- An implementation of recurrent neural networks in pure Haskell.
 --
 -- A network is an adjacency matrix of connection weights, the number of
--- neurons, and the number of inputs.
+-- neurons, the number of inputs, and the threshold values for each neuron.
 --
--- Usage:
---
+-- > module Main where
+-- > import AI.HNN.Recurrent.Network
+-- > import qualified Data.Vector.Unboxed as U
+-- > import Control.Monad
+-- > import Control.Monad.Writer
+-- > import System.Random.MWC
+-- >
 -- > main = do
 -- >    let numNeurons = 3
 -- >        numInputs  = 2
--- >        thresholds = U.fromList $ replicate numNeurons 0.5
--- >        inputs     = map (U.fromList) [ [1, 0]
--- >                                      , [0, 1]
--- >                                      , [2, 3]
--- >                                      ]
--- >        adjmatrix  = [ 0.5, 0.3, 0.9,
--- >                       0.1, 0.8, 0.4,
--- >                       0.7, 0.6, 0.2 ]
--- >    n <- createNetworkWith numNeurons numInputs (U.fromList adjmatrix)
--- >    n <- foldM (\x -> computeStepM x sigmoid thresholds) n inputs
--- >    putStrLn . show $ output n 1 -- get 1 output
+-- >        thresholds = U.replicate numNeurons 0.5
+-- >        input      = U.fromList [1, 0]
+-- >
+-- >    adj <- randomMatrix numNeurons
+-- >    n <- createNetwork numNeurons numInputs adj thresholds :: IO (Network Double)
+-- >    output <- evalNet n input sigmoid
+-- >    putStrLn $ "Output: " ++ (show output)
+-- >    return ()
+-- >    where
+-- >        randomMatrix n = withSystemRandom . asGenST $ \gen ->
+-- >            uniformVector gen (n*n)
 --
--- This example creates a network with 3 neurons, the "first" two of which are
--- input neurons, and steps it over 3 input vectors.
+-- This creates a network with three neurons (two of which are inputs), a
+-- random connection / weight matrix, and arbitrary thresholds for each neuron.
+-- Then, we evaluate the network with an arbitrary input.
 --
--- In a recurrent network, *any* non-input value can be usefully considered an
--- output. By convention, then, calling `output net n` returns a vector of the
--- first `n` neuron values after the inputs. Think of it like this:
---
--- > [ input1, input2, output1, ..., outputN ]
---
--- It is up to you to structure your net accordingly. The upcoming
--- neuro-evolution training algorithm will also follow this convention.
+-- For the purposes of this library, the outputs returned are the values of all
+-- the neurons except the inputs. Conceptually, in a recurrent net *any*
+-- non-input neuron can be treated as an output, so we let you decide which
+-- ones matter.
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
-                                 sigmoid, computeStepM, weights,
-                                 state, size, nInputs, output, createNetworkWith) where
+                                 sigmoid, evalNet, weights,
+                                 size, nInputs) where
 
 import AI.HNN.Internal.Matrix
 import System.Random.MWC
-
 import qualified Data.Vector.Unboxed as U
-
+import Control.Monad
 
 -- | Our recurrent neural network
 data Network a = Network
                  { weights :: !(Matrix a)
-                 , state   :: !(Vec a)
                  , size    :: {-# UNPACK #-} !Int
                  , nInputs :: {-# UNPACK #-} !Int
+                 , thresh  :: !(Vec a)
                  } deriving Show
 
--- | Creates a network with n neurons, m of which are inputs, and randomized weights
-createNetwork :: (Variate a, U.Unbox a, Fractional a) => Int -> Int -> IO (Network a)
-createNetwork n m = withSystemRandom . asGenST $ \gen -> do
-    rm <- uniformVector gen (n*n)
-    return $! Network (Matrix rm n n) (U.replicate n 0.0) n m
-
 -- | Creates a network with an adjacency matrix of your choosing, specified as
---   an unboxed vector.
-createNetworkWith :: (Variate a, U.Unbox a, Fractional a) =>
-    Int -> Int -> Vec a -> IO (Network a)
-createNetworkWith n m matrix = return $!
-    Network (Matrix matrix n n) (U.replicate n 0.0) n m
+--   an unboxed vector. You also must supply a vector of threshold values.
+createNetwork :: (Variate a, U.Unbox a, Fractional a) =>
+    Int -> Int -> Vec a -> Vec a -> IO (Network a)
+
+createNetwork n m matrix thresh = return $!
+    Network (Matrix matrix n n) n m thresh
 
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step.
@@ -81,31 +77,28 @@ createNetworkWith n m matrix = return $!
 --   A "threshold" for a neuron is a penalty deducted from the value
 --   calculated. The thresholdList is a list of such for each neuron.
 computeStep :: (Variate a, U.Unbox a, Num a) =>
-    Network a -> (a -> a) -> Vec a -> Vec a -> Network a
+    Network a -> Vec a -> (a -> a) -> Vec a -> Vec a
 
-computeStep (Network{..}) activation thresh input =
-    Network weights (overlay input next nInputs) size nInputs
+computeStep (Network{..}) state activation input =
+    input U.++ (U.unsafeDrop nInputs next)
     where
-        overlay :: (Variate a, U.Unbox a) => Vec a -> Vec a -> Int -> Vec a
-        overlay new old i = new U.++ (U.unsafeDrop i old)
-        {-# INLINE overlay #-}
         next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
         {-# INLINE next #-}
 
--- | Monadic version of `computeStep`, for convenience.
-computeStepM :: (Variate a, U.Unbox a, Num a, Monad m) =>
-    Network a -> (a -> a) -> Vec a -> Vec a -> m (Network a)
+-- | Evaluate a network with a given input `n` timesteps, where n is the size
+--   of the network.
+evalNet :: (U.Unbox a, Num a, Variate a, Fractional a) =>
+    Network a -> Vec a -> (a -> a) -> IO (Vec a)
 
-computeStepM n a t i = return $ computeStep n a t i
-{-# INLINE computeStepM #-}
-
--- | Grab *n* outputs from the net.
-output :: (U.Unbox a) => Network a -> Int -> Vec a
-output (Network{..}) n = U.unsafeSlice nInputs n state
-{-# INLINE output #-}
+evalNet n@(Network{..}) input activation = do
+    let state = input U.++ (U.replicate (size - nInputs) 0.0)
+    s <- foldM (\x -> computeStepM n x activation) state (replicate size input)
+    return $ U.unsafeDrop nInputs s
+    where
+        computeStepM n s a i = return $ computeStep n s a i
+        {-# INLINE computeStepM #-}
 
 -- | It's a simple, differentiable sigmoid function.
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 {-# INLINE sigmoid #-}
-
