@@ -20,12 +20,12 @@
 -- >
 -- > main = do
 -- >     let numNeurons = 3
--- >         numInputs  = 2
+-- >         numInputs  = 1
 -- >         thresholds = U.replicate numNeurons 0.5
--- >         input      = U.fromList [1, 0]
+-- >         input      = U.fromList [2]
 -- >         adj        = U.fromList [ 0.0, 0.0, 0.0,
--- >                                   0.0, 0.0, 0.0,
--- >                                   0.7, 0.2, 0.0 ]
+-- >                                   0.1, 0.2, 0.0,
+-- >                                   0.0, 0.7, 0.0 ]
 -- >
 -- >     n <- createNetwork numNeurons numInputs adj thresholds :: IO (Network Double)
 -- >     output <- evalNet n input sigmoid
@@ -90,7 +90,7 @@ evalNet n@(Network{..}) input activation = do
     s <- foldM (\x -> computeStepM n x activation) state $! replicate size input
     return $! U.unsafeDrop nInputs s
     where
-        computeStepM n s a i = return $ computeStep n s a i
+        computeStepM n s a i = return $! computeStep n s a i
         {-# INLINE computeStepM #-}
         state = input U.++ (U.replicate (size - nInputs) 0.0)
         {-# INLINE state #-}
