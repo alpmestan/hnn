@@ -66,12 +66,8 @@ createNetwork n m matrix thresh = return $!
     Network (Matrix matrix n n) n m thresh
 
 -- | Evaluates a network with the specified function and list of inputs
---   precisely one time step.
---
---   > netAfter = computeStep netBefore activation thresholdList inputs
---
---   A "threshold" for a neuron is a penalty deducted from the value
---   calculated. The thresholdList is a list of such for each neuron.
+--   precisely one time step. This is used by `evalNet` which is probably a
+--   more convenient interface for client applications.
 computeStep :: (Variate a, U.Unbox a, Num a) =>
     Network a -> Vec a -> (a -> a) -> Vec a -> Vec a
 
