@@ -23,17 +23,16 @@
 -- >         numInputs  = 2
 -- >         thresholds = U.replicate numNeurons 0.5
 -- >         input      = U.fromList [1, 0]
+-- >         adj        = U.fromList [ 0.0, 0.0, 0.0,
+-- >                                   0.0, 0.0, 0.0,
+-- >                                   0.7, 0.2, 0.0 ]
 -- >
--- >     adj <- randomMatrix numNeurons
 -- >     n <- createNetwork numNeurons numInputs adj thresholds :: IO (Network Double)
 -- >     output <- evalNet n input sigmoid
 -- >     putStrLn $ "Output: " ++ (show output)
--- >     where
--- >         randomMatrix n = withSystemRandom . asGenST $ \gen ->
--- >             uniformVector gen (n*n)
 --
--- This creates a network with three neurons (two of which are inputs), a
--- random connection / weight matrix, and arbitrary thresholds for each neuron.
+-- This creates a network with three neurons (two of which are inputs), an
+-- arbitrary connection / weight matrix, and arbitrary thresholds for each neuron.
 -- Then, we evaluate the network with an arbitrary input.
 --
 -- For the purposes of this library, the outputs returned are the values of all
