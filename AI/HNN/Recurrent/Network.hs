@@ -22,7 +22,7 @@
 -- >     let numNeurons = 3
 -- >         numInputs  = 1
 -- >         thresholds = U.replicate numNeurons 0.5
--- >         input      = U.fromList [2]
+-- >         input      = map (U.fromList) [ [0.38], [0.74] ]
 -- >         adj        = U.fromList [ 0.0, 0.0, 0.0,
 -- >                                   0.1, 0.2, 0.0,
 -- >                                   0.0, 0.7, 0.0 ]
