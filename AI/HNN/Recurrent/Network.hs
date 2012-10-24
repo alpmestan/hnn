@@ -88,7 +88,7 @@ evalNet :: (U.Unbox a, Num a, Variate a, Fractional a) =>
     Network a -> Vec a -> (a -> a) -> IO (Vec a)
 
 evalNet n@(Network{..}) input activation = do
-    s <- foldM (\x -> computeStepM n x activation) state $ replicate size input
+    s <- foldM (\x -> computeStepM n x activation) state $! replicate size input
     return $! U.unsafeDrop nInputs s
     where
         computeStepM n s a i = return $ computeStep n s a i
