@@ -31,7 +31,7 @@
 -- >     output <- evalNet n input sigmoid
 -- >     putStrLn $ "Output: " ++ (show output)
 --
--- This creates a network with three neurons (two of which are inputs), an
+-- This creates a network with three neurons (one of which is an input), an
 -- arbitrary connection / weight matrix, and arbitrary thresholds for each neuron.
 -- Then, we evaluate the network with an arbitrary input.
 --
