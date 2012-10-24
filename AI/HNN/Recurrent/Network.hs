@@ -46,7 +46,7 @@
 
 module AI.HNN.Recurrent.Network (Network, createNetwork, computeStep,
                                  sigmoid, evalNet, weights,
-                                 size, nInputs) where
+                                 size, nInputs, thresh) where
 
 import AI.HNN.Internal.Matrix
 import System.Random.MWC
