@@ -88,12 +88,13 @@ evalNet :: (U.Unbox a, Num a, Variate a, Fractional a) =>
     Network a -> Vec a -> (a -> a) -> IO (Vec a)
 
 evalNet n@(Network{..}) input activation = do
-    let state = input U.++ (U.replicate (size - nInputs) 0.0)
     s <- foldM (\x -> computeStepM n x activation) state $ replicate size input
-    return $ U.unsafeDrop nInputs s
+    return $! U.unsafeDrop nInputs s
     where
         computeStepM n s a i = return $ computeStep n s a i
         {-# INLINE computeStepM #-}
+        state = input U.++ (U.replicate (size - nInputs) 0.0)
+        {-# INLINE state #-}
 
 -- | It's a simple, differentiable sigmoid function.
 sigmoid :: Floating a => a -> a
