@@ -16,24 +16,21 @@
 -- > module Main where
 -- > import AI.HNN.Recurrent.Network
 -- > import qualified Data.Vector.Unboxed as U
--- > import Control.Monad
--- > import Control.Monad.Writer
 -- > import System.Random.MWC
 -- >
 -- > main = do
--- >    let numNeurons = 3
--- >        numInputs  = 2
--- >        thresholds = U.replicate numNeurons 0.5
--- >        input      = U.fromList [1, 0]
+-- >     let numNeurons = 3
+-- >         numInputs  = 2
+-- >         thresholds = U.replicate numNeurons 0.5
+-- >         input      = U.fromList [1, 0]
 -- >
--- >    adj <- randomMatrix numNeurons
--- >    n <- createNetwork numNeurons numInputs adj thresholds :: IO (Network Double)
--- >    output <- evalNet n input sigmoid
--- >    putStrLn $ "Output: " ++ (show output)
--- >    return ()
--- >    where
--- >        randomMatrix n = withSystemRandom . asGenST $ \gen ->
--- >            uniformVector gen (n*n)
+-- >     adj <- randomMatrix numNeurons
+-- >     n <- createNetwork numNeurons numInputs adj thresholds :: IO (Network Double)
+-- >     output <- evalNet n input sigmoid
+-- >     putStrLn $ "Output: " ++ (show output)
+-- >     where
+-- >         randomMatrix n = withSystemRandom . asGenST $ \gen ->
+-- >             uniformVector gen (n*n)
 --
 -- This creates a network with three neurons (two of which are inputs), a
 -- random connection / weight matrix, and arbitrary thresholds for each neuron.
@@ -92,7 +89,7 @@ evalNet :: (U.Unbox a, Num a, Variate a, Fractional a) =>
 
 evalNet n@(Network{..}) input activation = do
     let state = input U.++ (U.replicate (size - nInputs) 0.0)
-    s <- foldM (\x -> computeStepM n x activation) state (replicate size input)
+    s <- foldM (\x -> computeStepM n x activation) state $ replicate size input
     return $ U.unsafeDrop nInputs s
     where
         computeStepM n s a i = return $ computeStep n s a i
