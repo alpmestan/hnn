@@ -76,24 +76,24 @@ computeStep :: (Variate a, U.Unbox a, Num a) =>
     Network a -> Vec a -> (a -> a) -> Vec a -> Vec a
 
 computeStep (Network{..}) state activation input =
-    input U.++ (U.unsafeDrop nInputs next)
+    U.map activation $! U.zipWith (-) (weights `apply` prefixed) thresh
     where
-        next = U.map activation $! U.zipWith (-) (weights `apply` state) thresh
-        {-# INLINE next #-}
+        prefixed = input U.++ (U.unsafeDrop nInputs state)
+        {-# INLINE prefixed #-}
 
--- | Evaluate a network with a given input `n` timesteps, where n is the size
---   of the network.
+-- | Iterates over a list of input vectors in sequence and computes one time
+--   step for each.
 evalNet :: (U.Unbox a, Num a, Variate a, Fractional a) =>
-    Network a -> Vec a -> (a -> a) -> IO (Vec a)
+    Network a -> [Vec a] -> (a -> a) -> IO (Vec a)
 
-evalNet n@(Network{..}) input activation = do
-    s <- foldM (\x -> computeStepM n x activation) state $! replicate size input
+evalNet n@(Network{..}) inputs activation = do
+    s <- foldM (\x -> computeStepM n x activation) state inputs
     return $! U.unsafeDrop nInputs s
     where
-        computeStepM n s a i = return $! computeStep n s a i
-        {-# INLINE computeStepM #-}
-        state = input U.++ (U.replicate (size - nInputs) 0.0)
+        state = U.replicate size 0.0
         {-# INLINE state #-}
+        computeStepM n s a i = return $ computeStep n s a i
+        {-# INLINE computeStepM #-}
 
 -- | It's a simple, differentiable sigmoid function.
 sigmoid :: Floating a => a -> a
