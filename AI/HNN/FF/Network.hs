@@ -1,4 +1,4 @@
-{-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards #-}
+{-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards, FlexibleContexts #-}
 
 -- |
 -- Module       : AI.HNN.FF.Network
@@ -29,19 +29,17 @@
 -- typeclasses. Having your number type implement the @Floating@ typeclass too is a good idea, since that's what most of the
 -- common activation functions require.
 
-module AI.HNN.FF.Network (Network, Vec, createNetwork, computeNetworkWith, computeNetworkWithS, sigmoid, tanh) where
+module AI.HNN.FF.Network (Network(..), createNetwork, computeNetworkWith, computeNetworkWithS, sigmoid, sigmoid', tanh, tanh') where
 
-import qualified Data.Vector         as V
-import qualified Data.Vector.Unboxed as U
-
+import Foreign.Storable as F
+import qualified Data.Vector as V
 import System.Random.MWC
-
-import AI.HNN.Internal.Matrix
+import Numeric.LinearAlgebra
 
 -- | Our feed-forward neural network type
 data Network a = Network
                  { matrices   :: !(V.Vector (Matrix a))
-                 , thresholds :: !(V.Vector (Vec a))
+                 , thresholds :: !(V.Vector (Vector a))
                  , nInputs    :: {-# UNPACK #-} !Int
                  , arch       :: ![Int]
                  }
@@ -50,22 +48,21 @@ data Network a = Network
 --   the net will have n1 neurons on the first layer, n2 neurons on the second, and so on
 -- 
 -- > createNetwork n l
-createNetwork :: (Variate a, U.Unbox a) => Int -> [Int] -> IO (Network a)
+createNetwork :: (Variate a, Storable a) => Int -> [Int] -> IO (Network a)
 createNetwork nI as = withSystemRandom . asGenST $ \gen -> do
   (vs, ts) <- go nI as V.empty V.empty gen
   return $! Network vs ts nI as
   where go _  []         ms ts _ = return $! (ms, ts)
         go !k (!a:archs) ms ts g = do
-          m  <- randomMatrix a k g
-          let !m' = Matrix m a k
-          t  <- randomMatrix a 1 g
-          go a archs (ms `V.snoc` m') (ts `V.snoc` t) g
+          m  <- reshape k `fmap` randomMat a k g
+          t  <- randomMat a 1 g
+          go a archs (ms `V.snoc` m) (ts `V.snoc` t) g
 
-        randomMatrix n m g = uniformVector g (n*m)
+        randomMat n m g = uniformVector g (n*m)
 
 -- Helper function that computes the output of a given layer
-computeLayerWith :: (U.Unbox a, Num a) => Vec a -> (Matrix a, Vec a, a -> a) -> Vec a
-computeLayerWith input (m, thresholds, f) = U.map f $! U.zipWith (-) (m `apply` input) thresholds 
+computeLayerWith :: (Num (Vector a), Product a) => Vector a -> (Matrix a, Vector a, a -> a) -> Vector a
+computeLayerWith input (m, thresholds, f) = mapVector f $! (m <> input) - thresholds
 {-# INLINE computeLayerWith #-}
 
 -- | Computes the output of the given 'Network' assuming all neurons have the given function
@@ -73,10 +70,10 @@ computeLayerWith input (m, thresholds, f) = U.map f $! U.zipWith (-) (m `apply` 
 -- 
 -- Example:
 -- 
--- > computeNetworkWith n sigmoid (U.fromList [0.5, 0.5])
-computeNetworkWith :: (U.Unbox a, Num a) => Network a -> (a -> a) -> Vec a -> Vec a
-computeNetworkWith (Network{..}) activation input = V.foldl' computeLayerWith input $ V.zip3 matrices thresholds (V.replicate (length arch) activation)
-{-# INLINE computeNetworkWith #-}
+-- > computeNetworkWith n sigmoid (fromList [0.5, 0.5])
+computeNetworkWith :: (Num (Vector a), Product a) => Network a -> (a -> a) -> Vector a -> Vector a
+computeNetworkWith n activation = computeNetworkWithS n (replicate (length $ arch n) activation)
+-- {-# INLINE computeNetworkWith #-}
 
 -- | Computes the output of the given 'Network', just like 'computeNetworkWith', but accepting
 --   different activation functions on each layer. We thus have:
@@ -84,9 +81,17 @@ computeNetworkWith (Network{..}) activation input = V.foldl' computeLayerWith in
 -- > computeNetworkWith n f input == computeNetworkWithS n (repeat f) input
 -- 
 -- (or, to be more accurate, we can replace @repeat f@ by a list containing a copy of @f@ per layer)
-computeNetworkWithS :: (U.Unbox a, Num a) => Network a -> [a -> a] -> Vec a -> Vec a
+computeNetworkWithS :: (Num (Vector a), Product a) => Network a -> [a -> a] -> Vector a -> Vector a
 computeNetworkWithS (Network{..}) activations input = V.foldl' computeLayerWith input $ V.zip3 matrices thresholds (V.fromList activations)
 
 sigmoid :: Floating a => a -> a
 sigmoid !x = 1 / (1 + exp (-x))
 {-# INLINE sigmoid #-}
+
+sigmoid' :: Floating a => a -> a
+sigmoid' !x = case sigmoid x of
+  s -> s * (1 - s)
+
+tanh' :: Floating a => a -> a
+tanh' !x = case tanh x of
+  s -> 1 - s**2
