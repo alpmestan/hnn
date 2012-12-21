@@ -66,16 +66,16 @@
 -- 
 -- Ok, you've tested this, and it gives terrible results. Let's fix this by letting 'trainNTimes' teach our neural net
 -- how to behave. Since we're using 'tanh' as our activation function, we will tell it to the training function,
--- and also specify the derivative, 'tanh\''.
+-- and also specify its derivative.
 -- 
--- >   let smartNet = trainNTimes 1000 0.8 n samples
+-- >   let smartNet = trainNTimes 1000 0.8 tanh tanh' n samples
 -- 
 -- So, this tiny piece of code will run the backpropagation algorithm on the samples 1000 times, with a learning rate
--- of 0.8. The learning rate is basically how "strongly" we should modify the weights when we compute the error. The bigger
--- it is, the more the weights are going to change significantly. Depending on the cases, it is good, but sometimes it can also
--- make the backprop algorithm oscillate around good weight values without actually getting to them. You usually want to test several
--- values and see which ones gets you the nicest neural net, which generalizes well to samples that are not in the training set while
--- giving decent results on the training set.
+-- of 0.8. The learning rate is basically how strongly we should modify the weights when we try to correct the error the net makes
+-- on our samples. The bigger it is, the more the weights are going to change significantly. Depending on the cases, it is good,
+-- but sometimes it can also make the backprop algorithm oscillate around good weight values without actually getting to them.
+-- You usually want to test several values and see which ones gets you the nicest neural net, which generalizes well to samples
+-- that are not in the training set while giving decent results on the training set.
 -- 
 -- Now, let's see how that worked out for us:
 -- 
@@ -100,8 +100,8 @@
 -- > sys     0m0.016s
 -- 
 -- Rejoyce! Feel free to play around with the library and report any bug, feature request and whatnot to us on
--- [our github repository](https://github.com/alpmestan/hnn/issues) using the appropriate tags. Also, you can
--- see the simple program we studied here with pretty colors [here](https://github.com/alpmestan/hnn/blob/master/examples/ff/xor.hs)
+-- our github repository <https://github.com/alpmestan/hnn/issues> using the appropriate tags. Also, you can
+-- see the simple program we studied here with pretty colors <https://github.com/alpmestan/hnn/blob/master/examples/ff/xor.hs>.
 
 module AI.HNN.FF.Network
     (
