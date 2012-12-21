@@ -4,10 +4,13 @@ synopsis:            A fast and simple neural network library
 description:         
     .
     A neural network library implemented (for now) purely in Haskell, relying on the excellent
-    vector library.
+    hmatrix library.
     .
     This library provides a straight and simple feed-forward neural networks implementation which
     is way better than the one in the first version of hnn.
+    .
+    If you're interested in the feedforward neural networks, please read the mini-tutorial on
+    'AI.HNN.FF.Network'.
     .
     TODO -> write about recurrent nets when they're implemented, and add one or two usage examples.
     .
@@ -23,8 +26,8 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     AI.HNN.FF.Network, AI.HNN.Recurrent.Network
-  other-modules:       AI.HNN.Internal.Matrix       
+  exposed-modules:     AI.HNN.FF.Network,
+                       AI.HNN.Recurrent.Network
   build-depends:       base ==4.5.*,
                        vector,
                        mwc-random,
