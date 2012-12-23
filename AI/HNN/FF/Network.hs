@@ -101,7 +101,8 @@
 -- 
 -- Rejoyce! Feel free to play around with the library and report any bug, feature request and whatnot to us on
 -- our github repository <https://github.com/alpmestan/hnn/issues> using the appropriate tags. Also, you can
--- see the simple program we studied here with pretty colors <https://github.com/alpmestan/hnn/blob/master/examples/ff/xor.hs>.
+-- see the simple program we studied here with pretty colors at <https://github.com/alpmestan/hnn/blob/master/examples/ff/xor.hs>
+-- and other ones at <https://github.com/alpmestan/hnn/tree/master/examples/ff>.
 
 module AI.HNN.FF.Network
     (
