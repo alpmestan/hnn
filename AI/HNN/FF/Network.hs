@@ -156,9 +156,9 @@ createNetwork :: (Variate a, Storable a) => Int -> [Int] -> Int -> IO (Network a
 createNetwork nInputs hiddens nOutputs =
   fmap Network $ withSystemRandom . asGenST $ \gen -> go gen dimensions V.empty
   where
-        go _ [] ms         = return ms
-        go gen ((n,m):ds) ms = do
-          mat <- randomMat n m gen
+        go _ [] !ms         = return ms
+        go gen ((!n,!m):ds) ms = do
+          !mat <- randomMat n m gen
           go gen ds (ms `V.snoc` mat)
         randomMat n m g = reshape m `fmap` uniformVector g (n*m)
         dimensions      = zip (hiddens ++ [nOutputs]) $
@@ -175,28 +175,28 @@ createNetwork nInputs hiddens nOutputs =
 -- | Computes the output of the network on the given input vector with the given activation function
 output :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> Vector a
 output (Network{..}) act input = V.foldl' f (join [input, 1]) matrices
-  where f inp m = mapVector act $ m <> inp
+  where f !inp m = mapVector act $ m <> inp
 {-# INLINE output #-}
 
 -- | Computes and keeps the output of all the layers of the neural network with the given activation function
 outputs :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> V.Vector (Vector a)
 outputs (Network{..}) act input = V.scanl f (join [input, 1]) matrices
-  where f inp m = mapVector act $ m <> inp
+  where f !inp m = mapVector act $ m <> inp
 {-# INLINE outputs #-}
 
 deltas :: (Floating (Vector a), Floating a, Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunctionDerivative a -> V.Vector (Vector a) -> Vector a -> V.Vector (Matrix a)
 deltas (Network{..}) act' os expected = V.zipWith outer (V.tail ds) (V.init os)
-  where dl = (V.last os - expected) * (deriv $ V.last os)
-        ds = V.scanr f dl (V.zip os matrices)
-        f (o, m) del = deriv o * (trans m <> del)
+  where !dl = (V.last os - expected) * (deriv $ V.last os)
+        !ds = V.scanr f dl (V.zip os matrices)
+        f (!o, m) !del = deriv o * (trans m <> del)
         deriv = mapVector act'
 {-# INLINE deltas #-}
 
 updateNetwork :: (Floating (Vector a), Floating a, Product a, Storable a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Sample a -> Network a
 updateNetwork alpha act act' n@(Network{..}) (input, expectedOutput) = Network $ V.zipWith (+) matrices corr
-    where xs = outputs n act input
-          ds = deltas n act' xs expectedOutput
-          corr = V.map (scale (-alpha)) ds
+    where !xs = outputs n act input
+          !ds = deltas n act' xs expectedOutput
+          !corr = V.map (scale (-alpha)) ds
 {-# INLINE updateNetwork #-}
           
 -- | Input vector and expected output vector
