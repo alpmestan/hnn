@@ -50,6 +50,14 @@ main = do
   n <- createNetwork 25 [250] 1
   let n' = trainNTimes 10000 0.5 tanh tanh' n samples
   mapM_ (putStrLn . show . output n' tanh . fst) samples
+  putStrLn "-------------"
+  putStrLn . show . output n' tanh $ testInput
+
+  where testInput = fromList [ 0, 0, 1, 1, 1
+                             , 0, 0, 0, 0, 1
+                             , 0, 0, 1, 1, 1
+                             , 0, 0, 0, 0, 1
+                             , 0, 0, 1, 1, 1 ]
 
 {-
 
