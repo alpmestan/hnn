@@ -9,7 +9,7 @@ notifications:
       - "\x0313hnn\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
 
 script:
-  - cabal configure && cabal build
+  - cabal install --only-dependencies && cabal configure && cabal build
 
 before_install:
   # Uncomment whenever hackage is down.
