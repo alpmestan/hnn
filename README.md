@@ -1,6 +1,8 @@
 hnn
 ===
 
+[![Build Status](https://secure.travis-ci.org/alpmestan/hnn.png?branch=master)](http://travis-ci.org/alpmestan/hnn)
+
 Repository for the rewrite of hnn - haskell neural network library
 
 You can find online documentation of approximately the latest version of this repo [here](http://alpmestan.com/hnn/doc/). See the _examples/_ directory to see how to use the library. 
