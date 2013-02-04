@@ -1,0 +1,18 @@
+language: haskell
+
+notifications:
+  irc:
+    channels:
+      - "irc.freenode.org#hnn"
+    skip_join: true
+    template:
+      - "\x0313hnn\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
+
+before_install:
+  # Uncomment whenever hackage is down.
+  # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && cabal update
+  - cabal update
+
+install:
+  - cabal configure
+  - cabal build
