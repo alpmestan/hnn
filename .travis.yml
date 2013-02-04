@@ -16,7 +16,7 @@ before_install:
   # - mkdir -p ~/.cabal && cp travis/config ~/.cabal/config && cabal update
   - sudo apt-get update -qq
   - cabal update
-  - sudo apt-get install -qq libgsl0-dev gsl-bin libblas3 libblas-dev liblapack-dev liblapack3
+  - sudo apt-get install -qq libgsl0-dev liblapack-dev
 
 install:
   - cabal install --only-dependencies
