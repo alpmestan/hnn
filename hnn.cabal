@@ -26,9 +26,9 @@ build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     AI.HNN.FF.Network,
-                       AI.HNN.Recurrent.Network
-  build-depends:       base ==4.5.*,
+  exposed-modules:     AI.HNN.FF.Network
+                       -- AI.HNN.Recurrent.Network
+  build-depends:       base >= 4 && < 5,
                        vector,
                        mwc-random,
                        hmatrix,
