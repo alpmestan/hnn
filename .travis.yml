@@ -1,13 +1,5 @@
 language: haskell
 
-notifications:
-  irc:
-    channels:
-      - "irc.freenode.org#hnn"
-    skip_join: true
-    template:
-      - "\x0313hnn\x03/\x0306%{branch}\x03 \x0314%{commit}\x03 %{build_url} %{message}"
-
 script:
   - cabal install --only-dependencies && cabal configure && cabal build
 
@@ -20,3 +12,8 @@ before_install:
 
 install:
   - cabal install --only-dependencies
+  
+notifications:
+  email:
+      - alpmestan@gmail.com
+  irc: "irc.freenode.org#hnn"
