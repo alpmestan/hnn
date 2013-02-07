@@ -32,5 +32,10 @@ library
                        vector,
                        mwc-random,
                        hmatrix,
-                       random
+                       random,
+                       vector-binary-instances >= 0.2,
+                       binary,
+                       zlib,
+                       bytestring
   ghc-options:         -O2 -funbox-strict-fields -Wall
+  ghc-prof-options:    -O2 -funbox-strict-fields -Wall -prof -auto-all -rtsopts

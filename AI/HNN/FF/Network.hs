@@ -28,6 +28,9 @@
 -- that implements the appropriate typeclasses you can see in the signatures of this module.
 -- Having your number type implement the @Floating@ typeclass too is a good idea, since that's what most of the
 -- common activation functions require.
+--
+-- /Note 2/: You can also give some precise weights to initialize the neural network with, with
+-- 'fromWeightMatrices'. You can also restore a neural network you had saved using 'loadNetwork'.
 -- 
 -- Here is an example of how to train a neural network to learn the XOR function.
 -- ( for reference: XOR(0, 0) = 0, XOR(0, 1) = 1, XOR(1, 0) = 1, XOR(1, 1) = 0 )
@@ -81,6 +84,15 @@
 -- 
 -- >   mapM_ (print . output smartNet tanh . fst) samples
 -- 
+-- You could even save that neural network's weights to a file, so that you don't need to train it again in the future, using 'saveNetwork':
+--
+-- >   saveNetwork "smartNet.nn" smartNet
+--
+-- Please note that 'saveNetwork' is just a wrapper around zlib compression + serialization using the binary package.
+-- AI.HNN.FF.Network also provides a 'Data.Binary.Binary' instance for 'Network', which means you can also simply use
+-- 'Data.Binary.encode' and 'Data.Binary.decode' to have your own saving/restoring routines, or to simply get a bytestring 
+-- we can send over the network, for example.
+-- 
 -- Here's a run of the program we described on my machine (with the timing): first set of
 -- fromList's is the output of the initial neural network, the second one is the output of
 -- 'smartNet' :-)
@@ -115,6 +127,7 @@ module AI.HNN.FF.Network
 
     -- * Creating a neural network
     , createNetwork
+    , fromWeightMatrices
 
     -- * Computing a neural network's output
     , output
@@ -127,19 +140,31 @@ module AI.HNN.FF.Network
     , trainUntil
     , trainNTimes
     , trainUntilErrorBelow
+    
+    -- * Loading and saving a neural network
+    , loadNetwork
+    , saveNetwork
     ) where
 
-
+import Codec.Compression.Zlib     (compress, decompress)
+import Data.Binary                (Binary(..), encode, decode)
+import Data.Vector.Binary         ()
 import Data.List                  (foldl')
-import Foreign.Storable
-import qualified Data.Vector as V
+import Foreign.Storable           (Storable)
+import qualified Data.ByteString.Lazy  as B
+import qualified Data.Vector          as V
+
 import System.Random.MWC
 import Numeric.LinearAlgebra
 
 -- | Our feed-forward neural network type
 newtype Network a = Network
                  { matrices   :: V.Vector (Matrix a) -- ^ the weight matrices
-                 } deriving Show
+                 } deriving (Show)
+
+instance (Element a, Binary a) => Binary (Network a) where
+  put (Network ms) = put ms
+  get = Network `fmap` get                 
 
 -- | The type of an activation function, mostly used for clarity in signatures
 type ActivationFunction a = a -> a
@@ -165,6 +190,12 @@ createNetwork nInputs hiddens nOutputs =
         dimensions      = zip (hiddens ++ [nOutputs]) $
                               (nInputs+1 : hiddens)
 {-# INLINE createNetwork #-}
+
+
+-- | Creates a neural network with exactly the weight matrices given as input here.
+--   We don't check that the numbers of rows/columns are compatible, etc. 
+fromWeightMatrices :: Storable a => V.Vector (Matrix a) -> Network a
+fromWeightMatrices ws = Network ws
 
 -- The `join [input, 1]' trick  below is a courtesy of Alberto Ruiz
 -- <http://dis.um.es/~alberto/>. Per his words:
@@ -273,3 +304,11 @@ tanh' :: Floating a => a -> a
 tanh' !x = case tanh x of
   s -> 1 - s**2
 {-# INLINE tanh' #-}
+
+-- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
+loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Maybe (Network a))
+loadNetwork fp = return . decode . decompress =<< B.readFile fp
+
+-- | Saving a neural network to a file (uses zlib compression on top of serialization using the binary package).
+saveNetwork :: (Storable a, Element a, Binary a) => FilePath -> Network a -> IO ()
+saveNetwork fp net = B.writeFile fp . compress $ encode net
