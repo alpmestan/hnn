@@ -21,7 +21,7 @@
 -- > import Numeric.LinearAlgebra
 -- >
 -- > main = do
--- >   n <- createNetwork 2 [2, 1] :: IO (Network Double)
+-- >   n <- createNetwork 2 [2] 1 :: IO (Network Double)
 -- >   print $ output n sigmoid (fromList [1, 1])
 -- 
 -- /Note/: Here, I create a @Network Double@, but you can replace 'Double' with any number type
@@ -43,7 +43,7 @@
 -- > samples = [ (fromList [0, 0], fromList [0])
 -- >           , (fromList [0, 1], fromList [1])
 -- >           , (fromList [1, 0], fromList [1])
--- >           , (fromList [1, 1], fromLits [0]) ]
+-- >           , (fromList [1, 1], fromList [0]) ]
 -- 
 -- You can see that this is basically a list of pairs of vectors, the first vector being
 -- the input given to the network, the second one being the expected output. Of course,
