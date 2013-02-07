@@ -152,7 +152,7 @@ import Data.Vector.Binary         ()
 import Data.List                  (foldl')
 import Foreign.Storable           (Storable)
 import qualified Data.ByteString.Lazy  as B
-import qualified Data.Vector          as V
+import qualified Data.Vector           as V
 
 import System.Random.MWC
 import Numeric.LinearAlgebra
@@ -307,7 +307,8 @@ tanh' !x = case tanh x of
 {-# INLINE tanh' #-}
 
 -- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
-loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Maybe (Network a))
+--   Will throw an exception if the file isn't there.
+loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Network a)
 loadNetwork fp = return . decode . decompress =<< B.readFile fp
 {-# INLINE loadNetwork #-}
 
