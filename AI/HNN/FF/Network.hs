@@ -68,7 +68,7 @@
 -- how to behave. Since we're using 'tanh' as our activation function, we will tell it to the training function,
 -- and also specify its derivative.
 -- 
--- >   let smartNet = trainNTimes 1000 0.8 tanh tanh' n samples
+-- >   let smartNet = trainNTimes 1000 0.8 tanh tanh' net samples
 -- 
 -- So, this tiny piece of code will run the backpropagation algorithm on the samples 1000 times, with a learning rate
 -- of 0.8. The learning rate is basically how strongly we should modify the weights when we try to correct the error the net makes
