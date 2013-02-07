@@ -196,6 +196,7 @@ createNetwork nInputs hiddens nOutputs =
 --   We don't check that the numbers of rows/columns are compatible, etc. 
 fromWeightMatrices :: Storable a => V.Vector (Matrix a) -> Network a
 fromWeightMatrices ws = Network ws
+{-# INLINE fromWeightMatrices #-}
 
 -- The `join [input, 1]' trick  below is a courtesy of Alberto Ruiz
 -- <http://dis.um.es/~alberto/>. Per his words:
@@ -308,7 +309,9 @@ tanh' !x = case tanh x of
 -- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
 loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Maybe (Network a))
 loadNetwork fp = return . decode . decompress =<< B.readFile fp
+{-# INLINE loadNetwork #-}
 
 -- | Saving a neural network to a file (uses zlib compression on top of serialization using the binary package).
 saveNetwork :: (Storable a, Element a, Binary a) => FilePath -> Network a -> IO ()
 saveNetwork fp net = B.writeFile fp . compress $ encode net
+{-# INLINE saveNetwork #-}
