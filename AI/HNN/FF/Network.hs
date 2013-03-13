@@ -140,6 +140,7 @@ module AI.HNN.FF.Network
     , trainUntil
     , trainNTimes
     , trainUntilErrorBelow
+    , quadError
     
     -- * Loading and saving a neural network
     , loadNetwork
