@@ -158,7 +158,9 @@ import qualified Data.Vector           as V
 import System.Random.MWC
 import Numeric.LinearAlgebra
 
--- | Our feed-forward neural network type
+-- | Our feed-forward neural network type. Note the 'Binary' instance, which means you can use 
+--   'encode' and 'decode' in case you need to serialize your neural nets somewhere else than
+--   in a file (e.g over the network)
 newtype Network a = Network
                  { matrices   :: V.Vector (Matrix a) -- ^ the weight matrices
                  } deriving (Show)
