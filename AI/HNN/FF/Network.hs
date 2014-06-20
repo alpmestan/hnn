@@ -1,4 +1,9 @@
-{-# LANGUAGE BangPatterns, ScopedTypeVariables, RecordWildCards, FlexibleContexts, TypeFamilies #-}
+{-# LANGUAGE BangPatterns, 
+             ScopedTypeVariables,
+             RecordWildCards,
+             FlexibleContexts,
+             TypeFamilies,
+             GeneralizedNewtypeDeriving #-}
 
 -- |
 -- Module       : AI.HNN.FF.Network
@@ -151,7 +156,6 @@ module AI.HNN.FF.Network
 
 import Codec.Compression.Zlib     (compress, decompress)
 import Data.Binary                (Binary(..), encode, decode)
-import Data.Vector.Binary         ()
 import Data.List                  (foldl')
 import Foreign.Storable           (Storable)
 import qualified Data.ByteString.Lazy  as B
@@ -165,11 +169,11 @@ import Numeric.LinearAlgebra
 --   in a file (e.g over the network)
 newtype Network a = Network
                  { matrices   :: V.Vector (Matrix a) -- ^ the weight matrices
-                 } deriving (Show)
+                 } deriving Show
 
 instance (Element a, Binary a) => Binary (Network a) where
-  put (Network ms) = put ms
-  get = Network `fmap` get                 
+  put (Network ms) = put . V.toList $ ms
+  get = (Network . V.fromList) `fmap` get                 
 
 -- | The type of an activation function, mostly used for clarity in signatures
 type ActivationFunction a = a -> a
