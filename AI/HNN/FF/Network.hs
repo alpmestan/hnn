@@ -43,10 +43,11 @@
 -- Now, we will specify our training set (what the net should try to learn).
 -- 
 -- > samples :: Samples Double
--- > samples = [ (fromList [0, 0], fromList [0])
--- >           , (fromList [0, 1], fromList [1])
--- >           , (fromList [1, 0], fromList [1])
--- >           , (fromList [1, 1], fromList [0]) ]
+-- > samples = [ fromList [0, 0] --> fromList [0]
+-- >           , fromList [0, 1] --> fromList [1]
+-- >           , fromList [1, 0] --> fromList [1]
+-- >           , fromList [1, 1] --> fromList [0] 
+-- >           ]
 -- 
 -- You can see that this is basically a list of pairs of vectors, the first vector being
 -- the input given to the network, the second one being the expected output. Of course,
@@ -124,6 +125,7 @@ module AI.HNN.FF.Network
     , ActivationFunctionDerivative
     , Sample
     , Samples
+    , (-->)
 
     -- * Creating a neural network
     , createNetwork
@@ -240,6 +242,29 @@ type Sample a = (Vector a, Vector a)
 
 -- | List of 'Sample's
 type Samples a = [Sample a]
+
+-- | Handy operator to describe your learning set, avoiding unnecessary parentheses. It's just a synonym for '(,)'. 
+--   Generally you'll load your learning set from a file, a database or something like that, but it can be nice for 
+--   quickly playing with hnn or for simple problems where you manually specify your learning set.
+--   That is, instead of writing:
+-- 
+-- > samples :: Samples Double
+-- > samples = [ (fromList [0, 0], fromList [0])
+-- >           , (fromList [0, 1], fromList [1])
+-- >           , (fromList [1, 0], fromList [1])
+-- >           , (fromList [1, 1], fromList [0]) 
+-- >           ]
+-- 
+--   You can write:
+-- 
+-- > samples :: Samples Double
+-- > samples = [ fromList [0, 0] --> fromList [0]
+-- >           , fromList [0, 1] --> fromList [1]
+-- >           , fromList [1, 0] --> fromList [1]
+-- >           , fromList [1, 1] --> fromList [0] 
+-- >           ]
+(-->) :: Vector a -> Vector a -> Sample a
+(-->) = (,)
 
 backpropOnce :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 backpropOnce rate act act' n samples = foldl' (updateNetwork rate act act') n samples
