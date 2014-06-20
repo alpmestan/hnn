@@ -37,3 +37,7 @@ library
     bytestring
   ghc-options:         -O2 -funbox-strict-fields -Wall
   ghc-prof-options:    -O2 -funbox-strict-fields -Wall -prof -auto-all -rtsopts
+
+source-repository head
+  type: git
+  location: http://github.com/alpmestan/hnn.git
