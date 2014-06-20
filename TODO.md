@@ -2,4 +2,4 @@
 * Implement backprop-with-momentum
 * Implement conjugate gradient backprop
 * Investigate rprop
-* Write hnn-opencl (and/or similar backends) for better performances
+* Port hnn to accelerate-blas when it's ready for prime time :-)
