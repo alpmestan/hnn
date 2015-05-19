@@ -70,11 +70,11 @@ data Network a = Network
 -- | Creates a network with an adjacency matrix of your choosing, specified as
 --   an unboxed vector. You also must supply a vector of threshold values.
 createNetwork :: (Variate a, Fractional a, Storable a) =>
-    Int ->          -- ^ number of total neurons neurons (input and otherwise)
-    Int ->          -- ^ number of inputs
-    [a] ->          -- ^ flat weight matrix
-    [a] ->          -- ^ threshold (bias) values for each neuron
-    IO (Network a)  -- ^ a new network
+       Int            -- ^ number of total neurons neurons (input and otherwise)
+    -> Int            -- ^ number of inputs
+    -> [a]            -- ^ flat weight matrix
+    -> [a]            -- ^ threshold (bias) values for each neuron
+    -> IO (Network a) -- ^ a new network
 
 createNetwork n m matrix thresh = return $!
     Network ( (n><n) matrix ) n m (n |> thresh)
@@ -83,11 +83,11 @@ createNetwork n m matrix thresh = return $!
 --   precisely one time step. This is used by `evalNet` which is probably a
 --   more convenient interface for client applications.
 computeStep :: (Variate a, Num a, F.Storable a, Product a) =>
-    Network a   -> -- ^ Network to evaluate input
-    Vector a    -> -- ^ vector of pre-existing state
-    (a -> a)    -> -- ^ activation function
-    Vector a    -> -- ^ list of inputs
-    Vector a       -- ^ new state vector
+    Network a   -- ^ Network to evaluate input
+    -> Vector a -- ^ vector of pre-existing state
+    -> (a -> a) -- ^ activation function
+    -> Vector a -- ^ list of inputs
+    -> Vector a -- ^ new state vector
 
 computeStep (Network{..}) state activation input =
     mapVector activation $! zipVectorWith (-) (weights <> prefixed) thresh
@@ -99,10 +99,10 @@ computeStep (Network{..}) state activation input =
 -- | Iterates over a list of input vectors in sequence and computes one time
 --   step for each.
 evalNet :: (Num a, Variate a, Fractional a, Product a) =>
-    Network a       -> -- ^ Network to evaluate inputs
-    [[a]]           -> -- ^ list of input lists
-    (a -> a)        -> -- ^ activation function
-    IO (Vector a)      -- ^ output state vector
+    Network a        -- ^ Network to evaluate inputs
+    -> [[a]]         -- ^ list of input lists
+    -> (a -> a)      -- ^ activation function
+    -> IO (Vector a) -- ^ output state vector
 
 evalNet n@(Network{..}) inputs activation = do
     s <- foldM (\x -> computeStepM n x activation) state inputsV
