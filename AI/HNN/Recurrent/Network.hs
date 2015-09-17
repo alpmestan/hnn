@@ -56,7 +56,7 @@ module AI.HNN.Recurrent.Network (
 
 import System.Random.MWC
 import Control.Monad
-import Numeric.LinearAlgebra
+import Numeric.LinearAlgebra hiding (i)
 import Foreign.Storable as F
 
 -- | Our recurrent neural network
@@ -92,7 +92,7 @@ computeStep :: (Variate a, Num a, F.Storable a, Product a) =>
 computeStep (Network{..}) state activation input =
     mapVector activation $! zipVectorWith (-) (weights <> prefixed) thresh
     where
-        prefixed = Numeric.LinearAlgebra.join
+        prefixed = Numeric.LinearAlgebra.vjoin
             [ input, (subVector nInputs (size-nInputs) state) ]
         {-# INLINE prefixed #-}
 
@@ -110,7 +110,7 @@ evalNet n@(Network{..}) inputs activation = do
     where
         state = fromList $ replicate size 0.0
         {-# INLINE state #-}
-        computeStepM n s a i = return $ computeStep n s a i
+        computeStepM _ s a i = return $ computeStep n s a i
         {-# INLINE computeStepM #-}
         inputsV = map (fromList) inputs
         {-# INLINE inputsV #-}
