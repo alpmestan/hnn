@@ -2,8 +2,7 @@
              ScopedTypeVariables,
              RecordWildCards,
              FlexibleContexts,
-             TypeFamilies,
-             GeneralizedNewtypeDeriving #-}
+             TypeFamilies #-}
 
 -- |
 -- Module       : AI.HNN.FF.Network
@@ -81,9 +80,9 @@
 -- 
 -- So, this tiny piece of code will run the backpropagation algorithm on the samples 1000 times, with a learning rate
 -- of 0.8. The learning rate is basically how strongly we should modify the weights when we try to correct the error the net makes
--- on our samples. The bigger it is, the more the weights are going to change significantly. Depending on the cases, it is good,
--- but sometimes it can also make the backprop algorithm oscillate around good weight values without actually getting to them.
--- You usually want to test several values and see which ones gets you the nicest neural net, which generalizes well to samples
+-- on our samples. The bigger it is, the more the weights are going to change significantly. Depending on the case, it can be good,
+-- but sometimes it can make the backprop algorithm oscillate around good weight values without actually getting to them.
+-- You usually want to test several values and see which ones get you the nicest neural net, which generalizes well to samples
 -- that are not in the training set while giving decent results on the training set.
 -- 
 -- Now, let's see how that worked out for us:
@@ -315,7 +314,7 @@ quadError act net samples = foldl' (\err (inp, out) -> err + (norm2 $ output net
 -- | Trains the neural network until the quadratic error ('quadError') comes below the given value (first argument),
 -- using the given learning rate (second argument).
 -- 
--- /Note/: this can loop pretty much forever when you're using a bad architecture for the problem, or unappropriate activation
+-- /Note/: this can loop pretty much forever when you're using a bad architecture for the problem, or inappropriate activation
 -- functions.
 trainUntilErrorBelow :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Ord a, Container Vector a, Num (RealOf a), a ~ RealOf a, Show a) => a -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 trainUntilErrorBelow x rate act = trainUntil (\_ n s -> quadError act n s < x) rate act
