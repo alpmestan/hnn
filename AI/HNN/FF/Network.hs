@@ -215,13 +215,13 @@ fromWeightMatrices ws = Network ws
 
 -- | Computes the output of the network on the given input vector with the given activation function
 output :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> Vector a
-output (Network{..}) act input = V.foldl' f (join [input, 1]) matrices
+output (Network{..}) act input = V.foldl' f (vjoin [input, 1]) matrices
   where f !inp m = mapVector act $ m <> inp
 {-# INLINE output #-}
 
 -- | Computes and keeps the output of all the layers of the neural network with the given activation function
 outputs :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> V.Vector (Vector a)
-outputs (Network{..}) act input = V.scanl f (join [input, 1]) matrices
+outputs (Network{..}) act input = V.scanl f (vjoin [input, 1]) matrices
   where f !inp m = mapVector act $ m <> inp
 {-# INLINE outputs #-}
 
