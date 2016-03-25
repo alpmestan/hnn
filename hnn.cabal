@@ -1,5 +1,5 @@
 name:                hnn
-version:             0.2.0.0
+version:             0.3
 synopsis:            A reasonably fast and simple neural network library
 description:         
     .
@@ -7,24 +7,22 @@ description:
     hmatrix library.
     .
     This library provides a straight and simple feed-forward neural networks implementation which
-    is way better than the one in hnn-0.1, in all aspects. It also provides a simple and little tested
-    implementation of recurrent neural networks.
+    is way better than the one in hnn-0.1, in all aspects.
     .
-    If you're interested in the feed-forward neural networks, please read the mini-tutorial on
-    @AI.HNN.FF.Network@.
+    You can find a mini-tutorial in @AI.HNN.FF.Network@.
 homepage:            http://github.com/alpmestan/hnn
 bug-reports:         http://github.com/alpmestan/hnn/issues
 license:             BSD3
 license-file:        LICENSE
 author:              Alp Mestanogullari <alpmestan@gmail.com>, Gatlin Johnson <rokenrol@gmail.com>
 maintainer:          Alp Mestanogullari <alpmestan@gmail.com>
-copyright:           2009-2014 Alp Mestanogullari, Gatlin Johnson
+copyright:           2009-2016 Alp Mestanogullari, Gatlin Johnson
 category:            AI
 build-type:          Simple
 cabal-version:       >=1.8
 
 library
-  exposed-modules:     AI.HNN.FF.Network, AI.HNN.Recurrent.Network
+  exposed-modules:     AI.HNN.FF.Network
   build-depends:
     base >=4 && <5,
     vector,
