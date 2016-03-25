@@ -56,8 +56,9 @@ module AI.HNN.Recurrent.Network (
 
 import System.Random.MWC
 import Control.Monad
-import Numeric.LinearAlgebra hiding (i)
+import Numeric.LinearAlgebra.HMatrix hiding (matrix, size)
 import Foreign.Storable as F
+import qualified Data.Vector.Storable as V
 
 -- | Our recurrent neural network
 data Network a = Network
@@ -82,7 +83,7 @@ createNetwork n m matrix thresh = return $!
 -- | Evaluates a network with the specified function and list of inputs
 --   precisely one time step. This is used by `evalNet` which is probably a
 --   more convenient interface for client applications.
-computeStep :: (Variate a, Num a, F.Storable a, Product a) =>
+computeStep :: (Variate a, Numeric a, F.Storable a, Product a) =>
     Network a   -- ^ Network to evaluate input
     -> Vector a -- ^ vector of pre-existing state
     -> (a -> a) -- ^ activation function
@@ -90,15 +91,15 @@ computeStep :: (Variate a, Num a, F.Storable a, Product a) =>
     -> Vector a -- ^ new state vector
 
 computeStep (Network{..}) state activation input =
-    mapVector activation $! zipVectorWith (-) (weights <> prefixed) thresh
+    cmap activation $! V.zipWith (-) (weights #> prefixed) thresh
     where
-        prefixed = Numeric.LinearAlgebra.vjoin
+        prefixed = V.concat
             [ input, (subVector nInputs (size-nInputs) state) ]
         {-# INLINE prefixed #-}
 
 -- | Iterates over a list of input vectors in sequence and computes one time
 --   step for each.
-evalNet :: (Num a, Variate a, Fractional a, Product a) =>
+evalNet :: (Numeric a, Variate a, Fractional a, Product a) =>
     Network a        -- ^ Network to evaluate inputs
     -> [[a]]         -- ^ list of input lists
     -> (a -> a)      -- ^ activation function
