@@ -161,7 +161,7 @@ import qualified Data.ByteString.Lazy  as B
 import qualified Data.Vector           as V
 
 import System.Random.MWC
-import Numeric.LinearAlgebra
+import Numeric.LinearAlgebra.HMatrix hiding (corr)
 
 -- | Our feed-forward neural network type. Note the 'Binary' instance, which means you can use 
 --   'encode' and 'decode' in case you need to serialize your neural nets somewhere else than
@@ -214,26 +214,26 @@ fromWeightMatrices ws = Network ws
 -- implementation and in my experiments those networks are able to easily solve non linearly separable problems."
 
 -- | Computes the output of the network on the given input vector with the given activation function
-output :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> Vector a
+output :: (Floating (Vector a), Numeric a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> Vector a
 output (Network{..}) act input = V.foldl' f (vjoin [input, 1]) matrices
-  where f !inp m = mapVector act $ m <> inp
+  where f !inp m = cmap act $ m #> inp
 {-# INLINE output #-}
 
 -- | Computes and keeps the output of all the layers of the neural network with the given activation function
-outputs :: (Floating (Vector a), Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> V.Vector (Vector a)
+outputs :: (Floating (Vector a), Numeric a, Storable a, Num (Vector a)) => Network a -> ActivationFunction a -> Vector a -> V.Vector (Vector a)
 outputs (Network{..}) act input = V.scanl f (vjoin [input, 1]) matrices
-  where f !inp m = mapVector act $ m <> inp
+  where f !inp m = cmap act $ m #> inp
 {-# INLINE outputs #-}
 
-deltas :: (Floating (Vector a), Floating a, Product a, Storable a, Num (Vector a)) => Network a -> ActivationFunctionDerivative a -> V.Vector (Vector a) -> Vector a -> V.Vector (Matrix a)
+deltas :: (Floating (Vector a), Floating a, Numeric a, Container Vector a, Num (Vector a)) => Network a -> ActivationFunctionDerivative a -> V.Vector (Vector a) -> Vector a -> V.Vector (Matrix a)
 deltas (Network{..}) act' os expected = V.zipWith outer (V.tail ds) (V.init os)
   where !dl = (V.last os - expected) * (deriv $ V.last os)
         !ds = V.scanr f dl (V.zip os matrices)
-        f (!o, m) !del = deriv o * (trans m <> del)
-        deriv = mapVector act'
+        f (!o, m) !del = deriv o * (tr m #> del)
+        deriv = cmap act'
 {-# INLINE deltas #-}
 
-updateNetwork :: (Floating (Vector a), Floating a, Product a, Storable a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Sample a -> Network a
+updateNetwork :: (Floating (Vector a), Floating a, Numeric a, Storable a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Sample a -> Network a
 updateNetwork alpha act act' n@(Network{..}) (input, expectedOutput) = Network $ V.zipWith (+) matrices corr
     where !xs = outputs n act input
           !ds = deltas n act' xs expectedOutput
@@ -269,7 +269,7 @@ type Samples a = [Sample a]
 (-->) :: Vector a -> Vector a -> Sample a
 (-->) = (,)
 
-backpropOnce :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
+backpropOnce :: (Floating (Vector a), Floating a, Numeric a, Num (Vector a), Container Vector a) => a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 backpropOnce rate act act' n samples = foldl' (updateNetwork rate act act') n samples
 {-# INLINE backpropOnce #-}
 
@@ -292,7 +292,7 @@ backpropOnce rate act act' n samples = foldl' (updateNetwork rate act act') n sa
 -- The second argument (after the predicate) is the learning rate. Then come the activation function you want,
 -- its derivative, the initial neural network, and your training set.
 -- Note that we provide 'trainNTimes' and 'trainUntilErrorBelow' for common use cases.
-trainUntil :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Container Vector a) => (Int -> Network a -> Samples a -> Bool) -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
+trainUntil :: (Floating (Vector a), Floating a, Numeric a, Num (Vector a), Container Vector a) => (Int -> Network a -> Samples a -> Bool) -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 trainUntil pr learningRate act act' net samples = go net 0
   where go n !k | pr k n samples = n
                 | otherwise      = case backpropOnce learningRate act act' n samples of
@@ -301,14 +301,14 @@ trainUntil pr learningRate act act' net samples = go net 0
 
 -- | Trains the neural network with backpropagation the number of times specified by the 'Int' argument,
 -- using the given learning rate (second argument).                                   
-trainNTimes :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Container Vector a) => Int -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
+trainNTimes :: (Floating (Vector a), Floating a, Numeric a, Num (Vector a), Container Vector a) => Int -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 trainNTimes n = trainUntil (\k _ _ -> k > n)
 {-# INLINE trainNTimes #-}
 
 -- | Quadratic error on the given training set using the given activation function. Useful to create
 -- your own predicates for 'trainUntil'.
-quadError :: (Floating (Vector a), Floating a, Num (Vector a), Num (RealOf a), Product a) => ActivationFunction a -> Network a -> Samples a -> RealOf a
-quadError act net samples = foldl' (\err (inp, out) -> err + (norm2 $ output net act inp - out)) 0 samples
+quadError :: (Floating (Vector a), Floating a, Fractional (RealOf a), Normed (Vector a), Numeric a) => ActivationFunction a -> Network a -> Samples a -> RealOf a
+quadError act net samples = realToFrac $ foldl' (\err (inp, out) -> err + (norm_2 $ output net act inp - out)) 0 samples
 {-# INLINE quadError #-}
 
 -- | Trains the neural network until the quadratic error ('quadError') comes below the given value (first argument),
@@ -316,7 +316,7 @@ quadError act net samples = foldl' (\err (inp, out) -> err + (norm2 $ output net
 -- 
 -- /Note/: this can loop pretty much forever when you're using a bad architecture for the problem, or inappropriate activation
 -- functions.
-trainUntilErrorBelow :: (Floating (Vector a), Floating a, Product a, Num (Vector a), Ord a, Container Vector a, Num (RealOf a), a ~ RealOf a, Show a) => a -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
+trainUntilErrorBelow :: (Floating (Vector a), Floating a, Numeric a, Normed (Vector a), Ord a, Container Vector a, Num (RealOf a), a ~ RealOf a, Show a) => a -> a -> ActivationFunction a -> ActivationFunctionDerivative a -> Network a -> Samples a -> Network a
 trainUntilErrorBelow x rate act = trainUntil (\_ n s -> quadError act n s < x) rate act
 {-# INLINE trainUntilErrorBelow #-}
 
