@@ -162,6 +162,7 @@ import qualified Data.Vector           as V
 
 import System.Random.MWC
 import Numeric.LinearAlgebra.HMatrix hiding (corr)
+import Data.Functor ((<$>))
 
 -- | Our feed-forward neural network type. Note the 'Binary' instance, which means you can use 
 --   'encode' and 'decode' in case you need to serialize your neural nets somewhere else than
@@ -340,10 +341,10 @@ tanh' !x = case tanh x of
 -- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
 --   Will throw an exception if the file isn't there.
 loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Network a)
-loadNetwork fp = return . decode . decompress =<< B.readFile fp
+loadNetwork fp = decode . decompress <$> B.readFile fp
 {-# INLINE loadNetwork #-}
 
 -- | Saving a neural network to a file (uses zlib compression on top of serialization using the binary package).
 saveNetwork :: (Storable a, Element a, Binary a) => FilePath -> Network a -> IO ()
-saveNetwork fp net = B.writeFile fp . compress $ encode net
+saveNetwork fp = B.writeFile fp . compress . encode
 {-# INLINE saveNetwork #-}
