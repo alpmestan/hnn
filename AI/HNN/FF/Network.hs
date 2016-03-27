@@ -340,10 +340,10 @@ tanh' !x = case tanh x of
 -- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
 --   Will throw an exception if the file isn't there.
 loadNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (Network a)
-loadNetwork fp = return . decode . decompress =<< B.readFile fp
+loadNetwork fp = decode . decompress <$> B.readFile fp
 {-# INLINE loadNetwork #-}
 
 -- | Saving a neural network to a file (uses zlib compression on top of serialization using the binary package).
 saveNetwork :: (Storable a, Element a, Binary a) => FilePath -> Network a -> IO ()
-saveNetwork fp net = B.writeFile fp . compress $ encode net
+saveNetwork fp = B.writeFile fp . compress . encode
 {-# INLINE saveNetwork #-}

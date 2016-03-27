@@ -262,10 +262,10 @@ complexSigmoid' (x :+ y) = (sigmoid' x) :+ (sigmoid' y)
 -- | Loading a neural network from a file (uses zlib compression on top of serialization using the binary package).
 --   Will throw an exception if the file isn't there.
 loadComplexNetwork :: (Storable a, Element a, Binary a) => FilePath -> IO (ComplexNetwork a)
-loadComplexNetwork fp = return . decode . decompress =<< B.readFile fp
+loadComplexNetwork fp = decode . decompress <$> B.readFile fp
 {-# INLINE loadComplexNetwork #-}
 
 -- | Saving a neural network to a file (uses zlib compression on top of serialization using the binary package).
 saveComplexNetwork :: (Storable a, Element a, Binary a) => FilePath -> ComplexNetwork a -> IO ()
-saveComplexNetwork fp net = B.writeFile fp . compress $ encode net
+saveComplexNetwork fp = B.writeFile fp . compress . encode
 {-# INLINE saveComplexNetwork #-}
