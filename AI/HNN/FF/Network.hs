@@ -162,6 +162,7 @@ import qualified Data.Vector           as V
 
 import System.Random.MWC
 import Numeric.LinearAlgebra.HMatrix hiding (corr)
+import Data.Functor ((<$>))
 
 -- | Our feed-forward neural network type. Note the 'Binary' instance, which means you can use 
 --   'encode' and 'decode' in case you need to serialize your neural nets somewhere else than
